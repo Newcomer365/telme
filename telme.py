@@ -118,7 +118,7 @@ async def start_eth_monitoring(update: Update, context: ContextTypes.DEFAULT_TYP
     if monitoring_job_eth:
         monitoring_job_eth.schedule_removal()
     monitoring_job_eth = job_queue.run_repeating(send_price_alert, interval=5, first=0)
-    await update.message.reply_text("s monitoring started")
+    await update.message.reply_text("s")
 
 async def start_web_monitoring(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global monitoring_job_web, previous_count
@@ -127,7 +127,7 @@ async def start_web_monitoring(update: Update, context: ContextTypes.DEFAULT_TYP
         monitoring_job_web.schedule_removal()
     previous_count = get_event_count()
     monitoring_job_web = job_queue.run_repeating(check_event_count, interval=20, first=20)
-    await update.message.reply_text(f"w monitoring started, current event count: {previous_count}")
+    await update.message.reply_text(f"{previous_count}")
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     eth_status = "Started" if monitoring_job_eth else "Not started"
@@ -135,7 +135,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "/h help\n"
         "/p  Instant query\n"
-        f"/s  Alert monitoring status: {eth_status}"
+        f"/s  Alert monitoring status: {eth_status}\n"
         f"/w  Web event monitoring status: {web_status}"
     )
 
