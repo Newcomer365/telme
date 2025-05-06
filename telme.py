@@ -135,8 +135,8 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "/h help\n"
         "/p  Instant query\n"
-        f"/s  Alert monitoring status: {eth_status}\n"
-        f"/w  Web event monitoring status: {web_status}"
+        f"/s  {eth_status}\n"
+        f"/w  {web_status}"
     )
 
 def main():
