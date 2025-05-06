@@ -134,8 +134,8 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     web_status = "Started" if monitoring_job_web else "Not started"
     await update.message.reply_text(
         "/h help\n"
-        "/p  Instant ETH price query\n"
-        "/s  Start ETH price monitoring\n"
+        "/p  Instant query\n"
+        f"/s  Alert monitoring status: {eth_status}"
         f"/w  Web event monitoring status: {web_status}"
     )
 
