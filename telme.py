@@ -53,7 +53,7 @@ async def send_price_alert(context: ContextTypes.DEFAULT_TYPE) -> None:
         await context.bot.send_message(chat_id=chat_id, text="up")
         alert_triggered = True
         last_alert_time = now
-    elif price < 1500:
+    elif price < 2000:
         await context.bot.send_message(chat_id=chat_id, text="down")
         alert_triggered = True
         last_alert_time = now
@@ -109,8 +109,23 @@ async def check_event_count(context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     if current != previous_count:
-        await context.bot.send_message(chat_id=chat_id, text="TG")
-        previous_count = current
+        original_previous = previous_count
+        confirmed = True
+        
+        for _ in range(3):
+            await asyncio.sleep(10)
+            try:
+                retry_current = get_event_count()
+                if retry_current == original_previous:
+                    confirmed = False
+                    break
+            except Exception:
+                confirmed = False
+                break
+        
+        if confirmed:
+            await context.bot.send_message(chat_id=chat_id, text="TG")
+            previous_count = curren
 
 async def start_eth_monitoring(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global monitoring_job_eth
