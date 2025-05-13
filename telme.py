@@ -125,7 +125,7 @@ async def check_event_count(context: ContextTypes.DEFAULT_TYPE) -> None:
         
         if confirmed:
             await context.bot.send_message(chat_id=chat_id, text="TG")
-            previous_count = curren
+            previous_count = current
 
 async def start_eth_monitoring(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global monitoring_job_eth
