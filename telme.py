@@ -90,7 +90,7 @@ def get_event_count() -> int:
             'offset': offset,
             'apikey': bscscan_api_key
         }
-        r = requests.get(BSC_SCAN_URL, params=params, timeout=10)
+        r = requests.get(BSC_SCAN_URL, params=params, timeout=20)
         r.raise_for_status()
         resp = r.json()
         logs = resp.get('result', [])
@@ -122,7 +122,7 @@ async def check_event_count(context: ContextTypes.DEFAULT_TYPE) -> None:
         confirmed = True
 
         for _ in range(3):
-            await asyncio.sleep(10)
+            await asyncio.sleep(15)
             try:
                 retry_current = get_event_count()
                 if retry_current == original_previous:
@@ -158,7 +158,7 @@ async def start_web_monitoring(update: Update, context: ContextTypes.DEFAULT_TYP
     if monitoring_job_web:
         monitoring_job_web.schedule_removal()
     previous_count = initial_count
-    monitoring_job_web = job_queue.run_repeating(check_event_count, interval=20, first=20)
+    monitoring_job_web = job_queue.run_repeating(check_event_count, interval=30, first=30)
     await update.message.reply_text(str(previous_count))
 
 
