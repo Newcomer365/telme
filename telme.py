@@ -6,7 +6,6 @@ from datetime import datetime
 import logging
 import time
 import asyncio
-from threading import Lock
 
 logging.basicConfig(
     filename='bot.log',
@@ -91,7 +90,7 @@ def get_event_count() -> int:
             'offset': offset,
             'apikey': bscscan_api_key
         }
-        r = requests.get(BSC_SCAN_URL, params=params, timeout=20)
+        r = requests.get(BSC_SCAN_URL, params=params, timeout=10)
         r.raise_for_status()
         resp = r.json()
         logs = resp.get('result', [])
@@ -107,37 +106,35 @@ def get_event_count() -> int:
 
 
 async def check_event_count(context: ContextTypes.DEFAULT_TYPE) -> None:
-    web_monitoring_lock = Lock()
     global previous_count
-    with web_monitoring_lock:
-        try:
-            current = get_event_count()
-        except Exception as e:
-            logging.error(f"Error fetching event count: {e}")
-            return
+    try:
+        current = get_event_count()
+    except Exception as e:
+        logging.error(f"Error fetching event count: {e}")
+        return
 
-        if previous_count is None:
-            previous_count = current
-            return
+    if previous_count is None:
+        previous_count = current
+        return
 
-        if current != previous_count:
-            original_previous = previous_count
-            confirmed = True
+    if current != previous_count:
+        original_previous = previous_count
+        confirmed = True
 
-            for _ in range(3):
-                await asyncio.sleep(15)
-                try:
-                    retry_current = get_event_count()
-                    if retry_current == original_previous:
-                        confirmed = False
-                        break
-                except Exception:
+        for _ in range(3):
+            await asyncio.sleep(10)
+            try:
+                retry_current = get_event_count()
+                if retry_current == original_previous:
                     confirmed = False
                     break
+            except Exception:
+                confirmed = False
+                break
 
-            if confirmed:
-                await context.bot.send_message(chat_id=chat_id, text="TG")
-                previous_count = current
+        if confirmed:
+            await context.bot.send_message(chat_id=chat_id, text="TG")
+            previous_count = current
 
 
 async def start_eth_monitoring(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -161,7 +158,7 @@ async def start_web_monitoring(update: Update, context: ContextTypes.DEFAULT_TYP
     if monitoring_job_web:
         monitoring_job_web.schedule_removal()
     previous_count = initial_count
-    monitoring_job_web = job_queue.run_repeating(check_event_count, interval=60, first=30)
+    monitoring_job_web = job_queue.run_repeating(check_event_count, interval=20, first=20)
     await update.message.reply_text(str(previous_count))
 
 
