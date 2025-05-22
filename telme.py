@@ -161,7 +161,7 @@ async def start_web_monitoring(update: Update, context: ContextTypes.DEFAULT_TYP
     if monitoring_job_web:
         monitoring_job_web.schedule_removal()
     previous_count = initial_count
-    monitoring_job_web = job_queue.run_repeating(check_event_count, interval=30, first=30)
+    monitoring_job_web = job_queue.run_repeating(check_event_count, interval=60, first=30)
     await update.message.reply_text(str(previous_count))
 
 
