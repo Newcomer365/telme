@@ -116,7 +116,7 @@ async def send_price_alert(context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=chat_id, text="up")
         alert_triggered = True
         last_alert_time = now
-    elif price < 2000:
+    elif price < 2250:
         await context.bot.send_message(chat_id=chat_id, text="down")
         alert_triggered = True
         last_alert_time = now
