@@ -107,16 +107,16 @@ async def check_event_count(context: ContextTypes.DEFAULT_TYPE):
 async def send_price_alert(context: ContextTypes.DEFAULT_TYPE):
     global alert_triggered, last_alert_time
     now = datetime.now()
-    if alert_triggered and (now - last_alert_time).seconds < 600:
+    if alert_triggered and (now - last_alert_time).seconds < 1800:
         return
     price = get_eth_price()
     if price is None:
         return
-    if price > 3000:
+    if price > 2500:
         await context.bot.send_message(chat_id=chat_id, text="up")
         alert_triggered = True
         last_alert_time = now
-    elif price < 2150:
+    elif price < 2000:
         await context.bot.send_message(chat_id=chat_id, text="down")
         alert_triggered = True
         last_alert_time = now
