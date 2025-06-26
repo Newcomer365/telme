@@ -112,7 +112,7 @@ async def send_price_alert(context: ContextTypes.DEFAULT_TYPE):
     price = get_eth_price()
     if price is None:
         return
-    if price > 2500:
+    if price > 3000:
         await context.bot.send_message(chat_id=chat_id, text="up")
         alert_triggered = True
         last_alert_time = now
