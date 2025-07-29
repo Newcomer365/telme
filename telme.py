@@ -1,7 +1,7 @@
 import requests
 import configparser
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from datetime import datetime
 import logging
 import time
@@ -156,6 +156,19 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     web_status = "Started" if monitoring_job_web else "Not started"
     await update.message.reply_text(f"/h help\n/p Instant query\n/s {eth_status}\n/w {web_status}")
 
+async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.strip().lower()
+    if text == 'p':
+        await price(update, context)
+    elif text == 's':
+        await start_eth_monitoring(update, context)
+    elif text == 'w':
+        await start_web_monitoring(update, context)
+    elif text == 'h':
+        await help(update, context)
+    else:
+        await update.message.reply_text("Unknown command. Try h for help.")
+
 def main():
     while True:
         try:
@@ -164,6 +177,7 @@ def main():
             app.add_handler(CommandHandler("s", start_eth_monitoring))
             app.add_handler(CommandHandler("w", start_web_monitoring))
             app.add_handler(CommandHandler("h", help))
+            app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
             app.run_polling()
         except:
             time.sleep(5)
