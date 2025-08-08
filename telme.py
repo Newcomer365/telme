@@ -147,7 +147,7 @@ async def send_price_alert_sol(context: ContextTypes.DEFAULT_TYPE):
     price = get_sol_price()
     if price is None:
         return
-    if price > 180:
+    if price > 300:
         await context.bot.send_message(chat_id=chat_id, text="s.up")
         alert_triggered_sol = True
         last_alert_time_sol = now
@@ -249,4 +249,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
