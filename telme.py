@@ -129,11 +129,11 @@ async def send_price_alert_eth(context: ContextTypes.DEFAULT_TYPE):
     if price is None:
         return
     if price > 5000:
-        await context.bot.send_message(chat_id=chat_id, text="up")
+        await context.bot.send_message(chat_id=chat_id, text="e.up")
         alert_triggered_eth = True
         last_alert_time_eth = now
     elif price < 3000:
-        await context.bot.send_message(chat_id=chat_id, text="down")
+        await context.bot.send_message(chat_id=chat_id, text="e.down")
         alert_triggered_eth = True
         last_alert_time_eth = now
     else:
@@ -147,12 +147,12 @@ async def send_price_alert_sol(context: ContextTypes.DEFAULT_TYPE):
     price = get_sol_price()
     if price is None:
         return
-    if price > 300:
-        await context.bot.send_message(chat_id=chat_id, text="up")
+    if price > 180:
+        await context.bot.send_message(chat_id=chat_id, text="s.up")
         alert_triggered_sol = True
         last_alert_time_sol = now
-    elif price < 100:
-        await context.bot.send_message(chat_id=chat_id, text="down")
+    elif price < 120:
+        await context.bot.send_message(chat_id=chat_id, text="s.down")
         alert_triggered_sol = True
         last_alert_time_sol = now
     else:
@@ -249,3 +249,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
