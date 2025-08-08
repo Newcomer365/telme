@@ -21,9 +21,12 @@ ADDRESS = '0xeba6ad75e46406cc6b6ce9c8ac6c431fef493e5b'
 BSC_SCAN_URL = 'https://api.bscscan.com/api'
 
 monitoring_job_eth = None
+monitoring_job_sol = None
 monitoring_job_web = None
-alert_triggered = False
-last_alert_time = datetime.min
+alert_triggered_eth = False
+alert_triggered_sol = False
+last_alert_time_eth = datetime.min
+last_alert_time_sol = datetime.min
 latest_checked_block = None
 web_monitoring_lock = Lock()
 
@@ -35,7 +38,20 @@ def get_eth_price():
             r.raise_for_status()
             data = r.json()
             if data.get('code') == '0':
-                return int(float(data['data'][0]['last']))
+                return float(data['data'][0]['last'])
+        except:
+            pass
+        time.sleep(5)
+
+def get_sol_price():
+    while True:
+        try:
+            url = "https://www.okx.com/api/v5/market/ticker?instId=SOL-USDT"
+            r = requests.get(url, timeout=10)
+            r.raise_for_status()
+            data = r.json()
+            if data.get('code') == '0':
+                return float(data['data'][0]['last'])
         except:
             pass
         time.sleep(5)
@@ -104,29 +120,55 @@ async def check_event_count(context: ContextTypes.DEFAULT_TYPE):
         except:
             pass
 
-async def send_price_alert(context: ContextTypes.DEFAULT_TYPE):
-    global alert_triggered, last_alert_time
+async def send_eth_alert(context: ContextTypes.DEFAULT_TYPE):
+    global alert_triggered_eth, last_alert_time_eth
     now = datetime.now()
-    if alert_triggered and (now - last_alert_time).seconds < 1800:
+    if alert_triggered_eth and (now - last_alert_time_eth).seconds < 1800:
         return
     price = get_eth_price()
     if price is None:
         return
     if price > 5000:
         await context.bot.send_message(chat_id=chat_id, text="up")
-        alert_triggered = True
-        last_alert_time = now
+        alert_triggered_eth = True
+        last_alert_time_eth = now
     elif price < 3000:
         await context.bot.send_message(chat_id=chat_id, text="down")
-        alert_triggered = True
-        last_alert_time = now
+        alert_triggered_eth = True
+        last_alert_time_eth = now
     else:
-        alert_triggered = False
+        alert_triggered_eth = False
 
-async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def send_sol_alert(context: ContextTypes.DEFAULT_TYPE):
+    global alert_triggered_sol, last_alert_time_sol
+    now = datetime.now()
+    if alert_triggered_sol and (now - last_alert_time_sol).seconds < 1800:
+        return
+    price = get_sol_price()
+    if price is None:
+        return
+    if price > 180:
+        await context.bot.send_message(chat_id=chat_id, text="up")
+        alert_triggered_sol = True
+        last_alert_time_sol = now
+    elif price < 100:
+        await context.bot.send_message(chat_id=chat_id, text="down")
+        alert_triggered_sol = True
+        last_alert_time_sol = now
+    else:
+        alert_triggered_sol = False
+
+async def price_eth(update: Update, context: ContextTypes.DEFAULT_TYPE):
     price = get_eth_price()
     if price is None:
-        await update.message.reply_text("Failed to fetch data, please try again later.")
+        await update.message.reply_text("fail")
+    else:
+        await update.message.reply_text(str(price))
+
+async def price_sol(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    price = get_sol_price()
+    if price is None:
+        await update.message.reply_text("fail")
     else:
         await update.message.reply_text(str(price))
 
@@ -135,7 +177,15 @@ async def start_eth_monitoring(update: Update, context: ContextTypes.DEFAULT_TYP
     job_queue = context.application.job_queue
     if monitoring_job_eth:
         monitoring_job_eth.schedule_removal()
-    monitoring_job_eth = job_queue.run_repeating(send_price_alert, interval=5, first=0)
+    monitoring_job_eth = job_queue.run_repeating(send_eth_alert, interval=5, first=0)
+    await update.message.reply_text("monitoring started")
+
+async def start_sol_monitoring(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global monitoring_job_sol
+    job_queue = context.application.job_queue
+    if monitoring_job_sol:
+        monitoring_job_sol.schedule_removal()
+    monitoring_job_sol = job_queue.run_repeating(send_sol_alert, interval=5, first=0)
     await update.message.reply_text("monitoring started")
 
 async def start_web_monitoring(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -143,7 +193,7 @@ async def start_web_monitoring(update: Update, context: ContextTypes.DEFAULT_TYP
     job_queue = context.application.job_queue
     latest_block = get_latest_block()
     if latest_block == -1:
-        await update.message.reply_text("Failed to get latest block")
+        await update.message.reply_text("fail")
         return
     latest_checked_block = latest_block
     if monitoring_job_web:
@@ -153,17 +203,20 @@ async def start_web_monitoring(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     eth_status = "Started" if monitoring_job_eth else "Not started"
+    sol_status = "Started" if monitoring_job_sol else "Not started"
     web_status = "Started" if monitoring_job_web else "Not started"
-    await update.message.reply_text(f"/h help\n/p Instant query\n/s {eth_status}\n/w {web_status}")
+    await update.message.reply_text(f"/h help\n/e ETH price\n/s SOL price\n/t ETH alert\n/w SOL alert\nlog: {eth_status}, {sol_status}, {web_status}")
 
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip().lower()
-    if text == 'p':
-        await price(update, context)
+    if text == 'e':
+        await price_eth(update, context)
     elif text == 's':
+        await price_sol(update, context)
+    elif text == 't':
         await start_eth_monitoring(update, context)
     elif text == 'w':
-        await start_web_monitoring(update, context)
+        await start_sol_monitoring(update, context)
     elif text == 'h':
         await help(update, context)
     else:
@@ -173,9 +226,10 @@ def main():
     while True:
         try:
             app = Application.builder().token(bot_token).build()
-            app.add_handler(CommandHandler("p", price))
-            app.add_handler(CommandHandler("s", start_eth_monitoring))
-            app.add_handler(CommandHandler("w", start_web_monitoring))
+            app.add_handler(CommandHandler("e", price_eth))
+            app.add_handler(CommandHandler("s", price_sol))
+            app.add_handler(CommandHandler("t", start_eth_monitoring))
+            app.add_handler(CommandHandler("w", start_sol_monitoring))
             app.add_handler(CommandHandler("h", help))
             app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
             app.run_polling()
